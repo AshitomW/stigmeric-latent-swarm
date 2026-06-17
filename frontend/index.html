@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stigmergic Latent Swarms Explorer</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Load Three.js, OrbitControls and Chart.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-title">
+            <h1>Stigmergic Latent Swarms</h1>
+            <p class="subtitle">Emergent Spatio-Temporal Choreography via ST-Graph Autoencoders</p>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Control Panel Sidebar -->
+        <section class="sidebar">
+            <!-- System Status Widget -->
+            <div class="card">
+                <h2>System Status</h2>
+                <div class="status-indicators">
+                    <div class="status-item">
+                        <span>Spring Dataset:</span>
+                        <span id="status-data" class="badge badge-error">Not Found</span>
+                    </div>
+                    <div class="status-item">
+                        <span>ST-GVAE Model:</span>
+                        <span id="status-model" class="badge badge-error">Untrained</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Training Control Widget -->
+            <div class="card">
+                <h2>Model Training</h2>
+                <div class="form-group">
+                    <label for="train-epochs">Epochs:</label>
+                    <input type="range" id="train-epochs" min="10" max="100" step="10" value="30">
+                    <span id="train-epochs-val" class="slider-value">30</span>
+                </div>
+                <button id="btn-train" class="btn btn-primary">Train ST-GVAE</button>
+                <div id="training-progress-container" class="progress-container hidden">
+                    <div id="training-progress-bar" class="progress-bar"></div>
+                    <p id="training-status-msg" class="status-msg">Training in progress...</p>
+                </div>
+            </div>
+
+            <!-- Swarm Explorer Widget -->
+            <div class="card">
+                <h2>Swarm Controller</h2>
+                <div class="form-group">
+                    <label for="swarm-objective">Exploration Target:</label>
+                    <select id="swarm-objective">
+                        <option value="spread">Maximize Agent Spread</option>
+                        <option value="velocity">Maximize Agent Velocity</option>
+                        <option value="cohesion">Maximize Group Cohesion</option>
+                        <option value="novelty">Neutral (Novelty Exploration)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="swarm-agents">Active Agents (Swarm Size):</label>
+                    <input type="range" id="swarm-agents" min="5" max="30" step="1" value="15">
+                    <span id="swarm-agents-val" class="slider-value">15</span>
+                </div>
+                <div class="form-group">
+                    <label for="param-inertia">Inertia weight (w):</label>
+                    <input type="range" id="param-inertia" min="0.1" max="1.0" step="0.1" value="0.7">
+                    <span id="param-inertia-val" class="slider-value">0.7</span>
+                </div>
+                <div class="form-group">
+                    <label for="param-stigmergy">Stigmergy Repulsion (c_stig):</label>
+                    <input type="range" id="param-stigmergy" min="0.0" max="1.0" step="0.1" value="0.3">
+                    <span id="param-stigmergy-val" class="slider-value">0.3</span>
+                </div>
+                <div class="form-group">
+                    <label for="param-mutual">Mutual Repulsion (c_mut):</label>
+                    <input type="range" id="param-mutual" min="0.0" max="1.0" step="0.1" value="0.3">
+                    <span id="param-mutual-val" class="slider-value">0.3</span>
+                </div>
+                <div class="form-group">
+                    <label for="param-goal">Goal Force (c_goal):</label>
+                    <input type="range" id="param-goal" min="0.0" max="1.0" step="0.1" value="0.5">
+                    <span id="param-goal-val" class="slider-value">0.5</span>
+                </div>
+                <div class="button-group">
+                    <button id="btn-explore-start" class="btn btn-success" disabled>Start Explorer</button>
+                    <button id="btn-explore-stop" class="btn btn-secondary" disabled>Pause</button>
+                    <button id="btn-explore-reset" class="btn btn-error" disabled>Reset</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visualization Panels -->
+        <section class="visualizer-container">
+            <!-- 3D Physics space choreography -->
+            <div class="card visualizer-card">
+                <h2>Generated Choreography (3D Space)</h2>
+                <div class="three-container">
+                    <div id="three-canvas-container"></div>
+                    <div id="three-controls" class="viewer-controls">
+                        <button id="btn-view-mode" class="btn btn-small btn-secondary">Show Reference Dynamics</button>
+                        <span class="info-text">Drag to rotate, Scroll to zoom</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2D Latent space / Explorer map -->
+            <div class="card visualizer-card">
+                <h2>Latent Manifold Navigation (2D PCA)</h2>
+                <div class="chart-container">
+                    <canvas id="latent-space-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Matplotlib Figures and Metrics -->
+            <div class="card full-width-card">
+                <h2>Analysis Figures (Generated by training pipeline)</h2>
+                <div class="figures-grid">
+                    <div class="figure-panel">
+                        <h3>Loss Curve</h3>
+                        <div class="img-wrapper">
+                            <img id="fig-loss-curve" src="/backend/data/loss_curve.png" alt="Training Loss Curve (Run training to generate)" onerror="this.style.display='none';">
+                            <div class="placeholder-text" id="fig-loss-placeholder">No figure generated yet. Train the model to generate the convergence curve.</div>
+                        </div>
+                    </div>
+                    <div class="figure-panel">
+                        <h3>Latent Space Map</h3>
+                        <div class="img-wrapper">
+                            <img id="fig-latent-space" src="/backend/data/latent_space.png" alt="PCA Latent Space Distribution (Run training to generate)" onerror="this.style.display='none';">
+                            <div class="placeholder-text" id="fig-latent-placeholder">No figure generated yet. Train the model to generate the PCA map.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Stigmergic Latent Swarms System &bull; Built for Generative Space Analysis</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+torch
+numpy
+scipy
+fastapi
+uvicorn
+matplotlib
+torch-scatter
+torch-sparse
+torch-geometric
